@@ -1,0 +1,179 @@
+<html>
+<body>
+  Months To Pay Off <input id="monthsToPayOffInput" type="number">
+  <div id="chart_div" style="width: 900px; height: 500px;"></div>
+</body>
+<head>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+    var loanAmount = 427500;
+    var calculateUpFrontCost = (points, originationFee) => {
+        return loanAmount * (points + originationFee) / 100;
+    }
+    var calculateFullLoanCost = (monthsToPayOff, apr, monthlyPayment = null) => {
+        monthlyPayment = monthlyPayment ?? calculateMonthlyPayment(apr, monthsToPayOff);
+        return monthsToPayOff * monthlyPayment;
+    }
+
+    var calculateAllPayments = (monthsToPayOff, apr, monthlyPayment) => {
+        var payments = [];
+        var balance = loanAmount;
+        for (var term = 0; term <= monthsToPayOff; term++) {
+            var interestAmount = calculateInterestAmount(apr, balance);
+            var principalAmount = calculatePrincipalAmount(monthlyPayment, interestAmount);
+            payments.push([balance, principalAmount, interestAmount])
+            // console.log(`${balance} ${principalAmount}  ${interestAmount}`);
+            balance = balance - principalAmount;
+        }
+        return payments;
+    }
+
+    // M = P [ i(1 + i)^n ] / [ (1 + i)^n – 1] / 12
+    var calculateMonthlyPayment = (apr, monthsToPayOff) => {
+        const P = loanAmount;
+        const i = monthlyInterestRate(apr);
+        const n = monthsToPayOff;
+        return P * (i * Math.pow((1 + i), n)) / (Math.pow(1 + i, n) - 1);
+    }
+    var monthlyInterestRate = (apr) => (apr) / 12 / 100;
+    var calculateInterestAmount = (apr, balance) => balance * (monthlyInterestRate(apr));
+    var calculatePrincipalAmount = (monthlyPayment, interestAmount) => monthlyPayment - interestAmount;
+
+    var mortgageData = [
+        { name: "15 Year Fixed", type: "15 Year Fixed", interestRate: 2.375, monthlyPayment: 2825, term: 180, points: 3, originationFee: 1 },
+        { name: "15 Year Fixed", type: "15 Year Fixed", interestRate: 2.5, monthlyPayment: 2851, term: 180, points: 2, originationFee: 1 },
+        { name: "15 Year Fixed", type: "15 Year Fixed", interestRate: 2.625, monthlyPayment: 2876, term: 180, points: 1, originationFee: 1 },
+        { name: "15 Year Fixed", type: "15 Year Fixed", interestRate: 2.75, monthlyPayment: 2901, term: 180, points: 0, originationFee: 1 },
+        { name: "15 Year Fixed", type: "15 Year Fixed", interestRate: 3, monthlyPayment: 2952, term: 180, points: 0, originationFee: 0 },
+        { name: "15 Year Fixed", type: "15 Year Fixed", interestRate: 3.125, monthlyPayment: 2978, term: 180, points: -0.125, originationFee: 0 },
+        { name: "15 Year Fixed", type: "15 Year Fixed", interestRate: 3.25, monthlyPayment: 3004, term: 180, points: -0.5, originationFee: 0 },
+        { name: "15 Year Fixed", type: "15 Year Fixed", interestRate: 3.375, monthlyPayment: 3030, term: 180, points: -0.625, originationFee: 0 },
+        { name: "15 Year Fixed", type: "15 Year Fixed", interestRate: 3.5, monthlyPayment: 3056, term: 180, points: -0.75, originationFee: 0 },
+        { name: "15 Year Fixed", type: "15 Year Fixed", interestRate: 3.625, monthlyPayment: 3082, term: 180, points: -0.875, originationFee: 0 },
+        { name: "VA 15 Year Fixed Rate", type: "VA 15 Year", interestRate: 2.5, monthlyPayment: 2851, term: 180, points: 2.25, originationFee: 1 },
+        { name: "VA 15 Year Fixed Rate", type: "VA 15 Year", interestRate: 2.625, monthlyPayment: 2876, term: 180, points: 0.75, originationFee: 1 },
+        { name: "VA 15 Year Fixed Rate", type: "VA 15 Year", interestRate: 2.75, monthlyPayment: 2901, term: 180, points: 0.25, originationFee: 1 },
+        { name: "VA 15 Year Fixed Rate", type: "VA 15 Year", interestRate: 2.875, monthlyPayment: 2927, term: 180, points: 0, originationFee: 1 },
+        { name: "VA 15 Year Fixed Rate", type: "VA 15 Year", interestRate: 3.125, monthlyPayment: 2978, term: 180, points: 0, originationFee: 0 },
+        { name: "VA 15 Year Fixed Rate", type: "VA 15 Year", interestRate: 3.25, monthlyPayment: 3004, term: 180, points: -0.625, originationFee: 0 },
+        { name: "VA 15 Year Fixed Rate", type: "VA 15 Year", interestRate: 3.375, monthlyPayment: 3030, term: 180, points: -0.75, originationFee: 0 },
+        { name: "VA 15 Year Fixed Rate", type: "VA 15 Year", interestRate: 3.5, monthlyPayment: 3056, term: 180, points: -0.875, originationFee: 0 },
+        { name: "VA 15 Year Fixed Rate", type: "VA 15 Year", interestRate: 3.625, monthlyPayment: 3082, term: 180, points: -1.25, originationFee: 0 },
+        { name: "VA 15 Year Fixed Rate", type: "VA 15 Year", interestRate: 3.75, monthlyPayment: 3109, term: 180, points: -1.5, originationFee: 0 },
+        { name: "VA 30 Year Fixed Rate", type: "VA 30 Year", interestRate: 2.625, monthlyPayment: 1717, term: 360, points: 3, originationFee: 1 },
+        { name: "VA 30 Year Fixed Rate", type: "VA 30 Year", interestRate: 2.75, monthlyPayment: 1745, term: 360, points: 1.5, originationFee: 1 },
+        { name: "VA 30 Year Fixed Rate", type: "VA 30 Year", interestRate: 2.875, monthlyPayment: 1774, term: 360, points: 1, originationFee: 1 },
+        { name: "VA 30 Year Fixed Rate", type: "VA 30 Year", interestRate: 3, monthlyPayment: 1802, term: 360, points: 0, originationFee: 1 },
+        { name: "VA 30 Year Fixed Rate", type: "VA 30 Year", interestRate: 3.25, monthlyPayment: 1861, term: 360, points: 0, originationFee: 0 },
+        { name: "VA 30 Year Fixed Rate", type: "VA 30 Year", interestRate: 3.375, monthlyPayment: 1890, term: 360, points: -0.125, originationFee: 0 },
+        { name: "VA 30 Year Fixed Rate", type: "VA 30 Year", interestRate: 3.5, monthlyPayment: 1920, term: 360, points: -0.25, originationFee: 0 },
+        { name: "VA 30 Year Fixed Rate", type: "VA 30 Year", interestRate: 3.625, monthlyPayment: 1950, term: 360, points: -0.5, originationFee: 0 },
+        { name: "VA 30 Year Fixed Rate", type: "VA 30 Year", interestRate: 3.75, monthlyPayment: 1980, term: 360, points: -0.75, originationFee: 0 },
+        { name: "VA 30 Year Fixed Rate", type: "VA 30 Year", interestRate: 3.875, monthlyPayment: 2010, term: 360, points: -0.875, originationFee: 0 },
+        { name: "HomeBuyers Choice 30 Year", type: "HomeBuyers Choice", interestRate: 3.75, monthlyPayment: 1980, term: 360, points: 1.75, originationFee: 1 },
+        { name: "HomeBuyers Choice 30 Year", type: "HomeBuyers Choice", interestRate: 3.875, monthlyPayment: 2010, term: 360, points: 1, originationFee: 1 },
+        { name: "HomeBuyers Choice 30 Year", type: "HomeBuyers Choice", interestRate: 4, monthlyPayment: 2041, term: 360, points: 0.5, originationFee: 1 },
+        { name: "HomeBuyers Choice 30 Year", type: "HomeBuyers Choice", interestRate: 4.125, monthlyPayment: 2072, term: 360, points: 0, originationFee: 1 },
+        { name: "HomeBuyers Choice 30 Year", type: "HomeBuyers Choice", interestRate: 4.375, monthlyPayment: 2134, term: 360, points: 0, originationFee: 0 },
+        { name: "30 Year Fixed", type: "30 Year Fixed", interestRate: 3.25, monthlyPayment: 1861, term: 360, points: 3, originationFee: 1 },
+        { name: "30 Year Fixed", type: "30 Year Fixed", interestRate: 3.375, monthlyPayment: 1890, term: 360, points: 2.5, originationFee: 1 },
+        { name: "30 Year Fixed", type: "30 Year Fixed", interestRate: 3.5, monthlyPayment: 1920, term: 360, points: 1.25, originationFee: 1 },
+        { name: "30 Year Fixed", type: "30 Year Fixed", interestRate: 3.625, monthlyPayment: 1950, term: 360, points: 0, originationFee: 1 },
+        { name: "30 Year Fixed", type: "30 Year Fixed", interestRate: 3.875, monthlyPayment: 2010, term: 360, points: 0, originationFee: 0 },
+        { name: "30 Year Fixed", type: "30 Year Fixed", interestRate: 4, monthlyPayment: 2041, term: 360, points: -0.125, originationFee: 0 },
+        { name: "30 Year Fixed", type: "30 Year Fixed", interestRate: 4.125, monthlyPayment: 2072, term: 360, points: -0.25, originationFee: 0 },
+        { name: "30 Year Fixed", type: "30 Year Fixed", interestRate: 4.25, monthlyPayment: 2103, term: 360, points: -0.375, originationFee: 0 },
+        { name: "30 Year Fixed", type: "30 Year Fixed", interestRate: 4.375, monthlyPayment: 2134, term: 360, points: -0.5, originationFee: 0 },
+        { name: "30 Year Fixed", type: "30 Year Fixed", interestRate: 4.5, monthlyPayment: 2166, term: 360, points: -0.75, originationFee: 0 },
+        { name: "30 Year Military Choice", type: "Military Choice", interestRate: 3.625, monthlyPayment: 1950, term: 360, points: 1.75, originationFee: 1 },
+        { name: "30 Year Military Choice", type: "Military Choice", interestRate: 3.75, monthlyPayment: 1980, term: 360, points: 1, originationFee: 1 },
+        { name: "30 Year Military Choice", type: "Military Choice", interestRate: 3.875, monthlyPayment: 2010, term: 360, points: 0.5, originationFee: 1 },
+        { name: "30 Year Military Choice", type: "Military Choice", interestRate: 4, monthlyPayment: 2041, term: 360, points: 0, originationFee: 1 },
+        { name: "30 Year Military Choice", type: "Military Choice", interestRate: 4.25, monthlyPayment: 2103, term: 360, points: 0, originationFee: 0 },
+        { name: "ARM 5/5", type: "ARM 5/5", interestRate: 3.25, monthlyPayment: 1861, term: 360, points: 1.25, originationFee: 1 },
+        { name: "ARM 5/5", type: "ARM 5/5", interestRate: 3.375, monthlyPayment: 1890, term: 360, points: 0.75, originationFee: 1 },
+        { name: "ARM 5/5", type: "ARM 5/5", interestRate: 3.5, monthlyPayment: 1920, term: 360, points: 0.25, originationFee: 1 },
+        { name: "ARM 5/5", type: "ARM 5/5", interestRate: 3.625, monthlyPayment: 1950, term: 360, points: 0, originationFee: 1 },
+        { name: "ARM 5/5", type: "ARM 5/5", interestRate: 3.875, monthlyPayment: 2010, term: 360, points: 0, originationFee: 0 },
+        { name: "ARM 3/5", type: "ARM 3/5", interestRate: 2.875, monthlyPayment: 1774, term: 360, points: 1.25, originationFee: 1 },
+        { name: "ARM 3/5", type: "ARM 3/5", interestRate: 3, monthlyPayment: 1802, term: 360, points: 0.75, originationFee: 1 },
+        { name: "ARM 3/5", type: "ARM 3/5", interestRate: 3.125, monthlyPayment: 1831, term: 360, points: 0.25, originationFee: 1 },
+        { name: "ARM 3/5", type: "ARM 3/5", interestRate: 3.25, monthlyPayment: 1861, term: 360, points: 0, originationFee: 1 },
+        { name: "ARM 3/5", type: "ARM 3/5", interestRate: 3.5, monthlyPayment: 1920, term: 360, points: 0, originationFee: 0 }
+    ];
+    var typeToColorMapper = {
+        "15 Year Fixed": "gold",
+        "30 Year Fixed": "khaki",
+        "VA 15 Year": "tomato",
+        "VA 30 Year": "orange",
+        "Military Choice": "indianred",
+        "HomeBuyers Choice": "crimson",
+        "ARM 5/5": "lawngreen",
+        "ARM 3/5": "forestgreen"
+    };
+
+    var formatDollar = (amount) => {
+      var formatter = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+      });
+
+      return formatter.format(amount); /* $2,500.00 */
+    }
+
+    var datumn = mortgageData[0]
+    var upFrontCosts = mortgageData.map(datumn => calculateUpFrontCost(datumn.points, datumn.originationFee));
+    var monthlyPayment = calculateMonthlyPayment(datumn.interestRate, 6 * 12);
+    var monthlyPayment2 = calculateMonthlyPayment(datumn.interestRate, datumn.term);
+    var allPayments = mortgageData.map(datumn => calculateAllPayments(6 * 12, datumn.interestRate, monthlyPayment));
+    var fullLoanCosts = mortgageData.map(datumn => calculateFullLoanCost(6 * 12, datumn.interestRate));
+    var totalCosts = mortgageData.map((datumn, idx) => upFrontCosts[idx] + fullLoanCosts[idx]);
+
+    google.charts.load('current', { 'packages': ['corechart'] });
+    google.charts.setOnLoadCallback(drawChart);
+
+    function drawChart(monthsToPayOff = null) {
+      monthsToPayOff = monthsToPayOff ?? 180;
+      var data = google.visualization.arrayToDataTable(
+          [
+              [{ id: 'upfront', label: 'UpFront Cost', type: 'number' },
+                  { id: 'full', label: 'Full Loan Cost', type: 'number' },
+                  { type: 'string', role: 'tooltip' },
+                  { type: 'string', role: 'style' }
+              ]
+          ].concat(
+              mortgageData.map(datumn => {
+                  const upfront = calculateUpFrontCost(datumn.points, datumn.originationFee);
+                  const full = calculateFullLoanCost(monthsToPayOff, datumn.interestRate);
+                  const total = upfront + full;
+                  return [
+                      upfront,
+                      total,
+                      `${datumn.name} ${datumn.interestRate}% (${formatDollar(upfront)}) (${formatDollar(total)})`,
+                      typeToColorMapper[datumn.type]
+                  ]
+              })
+          )
+      );
+
+      var options = {
+          title: 'Up Front Cost vs. Total Cost',
+          hAxis: { title: 'Up Front Cost' },
+          vAxis: { title: 'Total Cost' },
+      };
+
+      var chart = new google.visualization.ScatterChart(document.getElementById('chart_div'));
+      chart.draw(data, options);
+    }
+    // listeners
+    document.querySelector("#monthsToPayOffInput").addEventListener("change", (event) => {
+      drawChart(event.target.value);
+    })
+    //   "change", (event) => {
+    //   // result.textContent = `You like ${event.target.value}`;
+    //   drawChart(event.target.value);
+    // });
+    </script>
+</head>
+
+</html>
